@@ -46,7 +46,9 @@ if (!class_exists('EW_Order_Status_Functions')) {
 		
 		public function send_whatsapp_message_status_changed($order_id, $old_status, $new_status, $order) {
 			$response = $this->handle_order_statuss_message($new_status, $order);
-			$order->add_order_note($response['message'] . ' for ' . $new_status);
+			if (!empty($response)) {
+				$order->add_order_note($response['message'] . ' for ' . $new_status);
+			}
 		}
 		
 		public function handle_order_statuss_message($order_status, $order) {

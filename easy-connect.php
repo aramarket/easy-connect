@@ -3,7 +3,7 @@
  * Plugin Name:       EasyConnect
  * Plugin URI:        https://easy-ship.in
  * Description:       Seamlessly integrate WhatsApp messaging with your WooCommerce store for better customer communication and support.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 5.2
  * Requires PHP:      7.2
  * Author:            AKASH

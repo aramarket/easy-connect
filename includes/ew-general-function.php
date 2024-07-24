@@ -4,49 +4,97 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-if (!class_exists('Easy_Dash_Function')) {
-	class Easy_Dash_Function {
+if (!class_exists('Easy_WhatsApp_Function')) {
+	class Easy_WhatsApp_Function {
 
-		public function calculate_cogs_for_order($order_id) {
-			$order = wc_get_order($order_id);
+		public function es_wa_simplify_order_status($status) {
+			// Remove 'wc-' prefix if present
+			if (strpos($status, 'wc-') === 0) {
+				return substr($status, 3);
+			}
+			// If 'wc-' prefix is not present, return status as is
+			return $status;
+		}
 
-			if (!$order) {
-				return array(
-					'success' => false,
-					'message' => 'Order not found',
-				);
+		public function es_wa_extract_phone_number($input) {
+			// Convert input to string if it is not already
+			$input = strval($input);
+
+			// Remove any non-numeric characters
+			$cleaned_number = preg_replace('/[^0-9]/', '', $input);
+
+			// If the cleaned number is more than 10 digits, get the last 10 digits
+			if (strlen($cleaned_number) > 10) {
+				$cleaned_number = substr($cleaned_number, -10);
 			}
 
-			$items = $order->get_items();
-
-			if (empty($items)) {
+			// Check if the cleaned input has fewer than 10 digits
+			if (strlen($cleaned_number) < 10) {
 				return array(
 					'success' => false,
-					'message' => 'Order has no items',
+					'message' => 'Invalid phone number'
 				);
-			}
-
-			$total_cogs = 0;
-
-			foreach ($items as $item_id => $item) {
-				$product_id = $item->get_product_id();
-				$quantity = $item->get_quantity();
-				$cogs = get_post_meta($product_id, '_cogs', true);
-
-				if ($cogs !== '') {
-					$item_cogs = floatval($cogs) * $quantity;
-					$total_cogs += $item_cogs;
-				}
 			}
 
 			return array(
 				'success' => true,
-				'message' => 'COGS calculated successfully',
-				'result'  => $total_cogs
+				'message' => 'Phone number cleaned successfully',
+				'result'  => $cleaned_number
+			);
+		}
+		
+		public function remove_special_characters($input) {
+			// Convert input to string if it is not already
+			$input = strval($input);
+
+			// Remove any character that is not a letter, number, or space
+			$cleaned_input = preg_replace('/[^a-zA-Z0-9\s]/', '', $input);
+
+			// Check if the cleaned input is empty
+			if (strlen($cleaned_input) == 0) {
+				return array(
+					'success' => false,
+					'message' => 'Input only contains special characters'
+				);
+			}
+
+			return array(
+				'success' => true,
+				'message' => 'Special characters removed successfully',
+				'result'  => $cleaned_input
 			);
 		}
 
+		
+		public function handleWhatsAppResponse($response) {
+			// Decode the JSON response
+			$data = json_decode($response, true);
 
+			// Check if there's an error in the response
+			if (isset($data['error'])) {
+				$error_message = $data['error']['message'];
+				return array(
+					'success' => false,
+					'message' => $error_message,
+				);
+			}
+
+			// Check if the message status is accepted
+			if (isset($data['messages'][0]['message_status']) && $data['messages'][0]['message_status'] === 'accepted') {
+				$wa_id = $data['contacts'][0]['wa_id'];
+				return array(
+					'success' => true,
+					'message' => 'WhatsApp message successfully Send',
+					'result'  => $wa_id
+				);
+			}
+
+			// Default return if no condition is met
+			return array(
+				'success' => false,
+				'message' => 'Unknown response format.',
+			);
+		}
 	}
 }
 
